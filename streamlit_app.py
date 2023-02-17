@@ -1,38 +1,29 @@
-from collections import namedtuple
-import altair as alt
-import math
-import pandas as pd
 import streamlit as st
+import whisper
 
-"""
-# Welcome to Streamlit!
+# assume you have an uploaded file named `uploaded_file`
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
-
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
-
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+# read the audio data from the uploaded file into a NumPy array
 
 
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+# App Title Name
+st.title("Speech to Text")
 
-    Point = namedtuple('Point', 'x y')
-    data = []
+# uploading an audio file
+audio_file = st.file_uploader("Upload Audio", type=["wav","mp3","m4a"])
+# audio_file = audio_recorder()
+# if audio_file:
+#     st.audio(audio_file, format="audio/wav")
 
-    points_per_turn = total_points / num_turns
 
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
+model = whisper.load_model("base")
+st.text("Whisper Model Loaded")
 
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+if st.sidebar.button("Transcribe Audio"):
+    if audio_file is not None:
+        st.sidebar.success("Transcribing Audio")
+        transcription = model.transcribe(audio_file.name)
+        st.sidebar.success("Transcription Complete")
+        st.text(transcription["text"])
+    else:
+        st.sidebar.error("Please Upload an Audio File")
